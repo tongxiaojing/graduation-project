@@ -85,7 +85,7 @@ export default {
 <style scoped lang="less">
 #bg{
   position:absolute;
-  background-image:url('../assets/bg.jpg');
+  background-image:url('../assets/hua.jpg');
   width:100%;
   height:100%;
   background-size: cover;
