@@ -1,9 +1,9 @@
 <template>
   <div id="app">
-    <div id="nav">
-      <router-link to="/Login">登录</router-link>|
-      <router-link to="/">主页</router-link> 
-    </div>
+    <!-- <div id="nav">
+      <router-link to="/">登录</router-link>|
+      <router-link to="/home">主页</router-link> 
+    </div> -->
     <router-view/>
   </div>
 </template>
@@ -16,8 +16,13 @@
   text-align: center;
   color: #2c3e50;
 }
+body{
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+}
 #nav {
-  padding: 30px;
   a {
     font-weight: bold;
     color: #2c3e50;

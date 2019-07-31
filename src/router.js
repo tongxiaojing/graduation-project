@@ -11,7 +11,7 @@ export default new Router({
   base: process.env.BASE_URL,
   routes: [
     {
-      path: '/',
+      path: '/home',
       name: 'home',
       component: Home,
       children:[
@@ -20,7 +20,7 @@ export default new Router({
       ]
     },
     {
-      path:'/Login',
+      path:'/',
       name:'Login',
       component: Login
     }

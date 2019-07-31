@@ -20,7 +20,8 @@
 <script>
 // @ is an alias to /src
 import HelloWorld from "@/components/HelloWorld.vue";
-
+import Cookie from "@/util/Cookie.js";
+import Base64 from "@/util/Base64.js";
 export default {
   name: "home",
   components: {
