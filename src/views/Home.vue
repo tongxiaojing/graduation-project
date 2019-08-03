@@ -20,8 +20,8 @@
               <i class="el-icon-menu"></i>
               <span>{{item.title}}</span>
             </template>
-            <el-menu-item-group v-for="(items,indexs) in item.titles" :key="indexs">
-              <el-menu-item :index="items.route">
+            <el-menu-item-group>
+              <el-menu-item v-for="(items,indexs) in item.titles" :key="indexs" @click="addTab(items,indexs)">
                 <router-link :to="items.route">{{items.listName}}</router-link>
               </el-menu-item>
             </el-menu-item-group>
@@ -33,27 +33,31 @@
           <el-header>
             <!-- 折叠按钮 -->
             <div class="left">
-            <el-button @click="control" size="mini" class="switch">
-              <i class="el-icon-s-fold" v-show="isCollapse"></i>
-              <i class="el-icon-s-unfold" v-show="!isCollapse"></i>
-            </el-button>
+              <el-button @click="control" size="mini" class="switch">
+                <i class="el-icon-s-fold" v-show="isCollapse"></i>
+                <i class="el-icon-s-unfold" v-show="!isCollapse"></i>
+              </el-button>
             </div>
             <!-- 动态增减表单 -->
             <div class="tabs">
-            <el-tabs v-model="editableTabsValue" type="card" editable @edit="handleTabsEdit">
-              <el-tab-pane
-                :key="item.name"
-                v-for="item in editableTabs"
-                :label="item.title"
-                :name="item.name"
+              <el-tabs
+                v-model="editableTabsValue"
+                type="card"
+                closable
+                @tab-click="jumpRouter"
+                @tab-remove="removeTab"
               >
-                {{item.content}}
-              </el-tab-pane>
-            </el-tabs>
+                <el-tab-pane
+                  v-for="item in editableTabs"
+                  :key="item.name"
+                  :label="item.title"
+                  :name="item.name"
+                >{{item.content}}</el-tab-pane>
+              </el-tabs>
             </div>
             <!-- 用户信息 -->
             <div class="right">
-              <span style="color:white;padding-right:10px;">狗子</span>
+              <span style="color:black;padding-right:10px;">狗子</span>
               <el-dropdown>
                 <i class="el-icon-setting" style="margin-right: 15px"></i>
                 <el-dropdown-menu slot="dropdown">
@@ -64,15 +68,13 @@
               </el-dropdown>
               <!-- 用户头像 -->
               <!-- 引用本地图片时，需要使用require解析路径 -->
-              <el-avatar
-                :size="50"
-                :src="require('../assets/user.jpg')"
-                style="margin-left: 15px"
-              ></el-avatar>
+              <el-avatar :size="50" :src="require('../assets/user.jpg')" style="margin-left: 15px"></el-avatar>
             </div>
           </el-header>
-          <el-main>         
+          <el-main>
+            <keep-alive>
               <router-view name="right"></router-view>
+            </keep-alive>
           </el-main>
         </el-container>
       </el-main>
@@ -87,17 +89,16 @@ export default {
   data() {
     return {
       isCollapse: true, //保存折叠状态
-      editableTabsValue: '2',
-        editableTabs: [{
-          title: 'Tab 1',
-          name: '1',
-          content: 'Tab 1 content'
-        }, {
-          title: 'Tab 2',
-          name: '2',
-          content: 'Tab 2 content'
-        }],
-        tabIndex: 2,
+      editableTabs: [//标签页内容数组
+        {
+          title: "首页",
+          name: "1",//标签内容位置
+          content: "首页内容"
+        }
+      ],
+      tabsList:[],//用于保存点击获取的标签名，以便赋值
+      editableTabsValue: "1",//默认标签页的位置
+      tabIndex: 1,//添加时从下标1开始，因为首页是默认占位的
       listData: [
         {
           title: "基础模块", //基础模块数据
@@ -122,6 +123,16 @@ export default {
       ]
     };
   },
+  created(){
+    let that=this;
+    let tabsName=JSON.parse(sessionStorage.getItem('tabsName'));//将存储的信息解析成json格式并赋给变量
+    let tabsIndex=sessionStorage.getItem('tabsIndex');//获取tabs的下标
+    if(tabsName && tabsIndex){//如果会话当中有值，就提取出来
+        that.editableTabs=tabsName;
+        that.editableTabsValue=tabsIndex;
+        that.tabIndex=Number(tabsIndex)
+    }
+  },
   methods: {
     /**
      *  控制折叠或是合上
@@ -129,39 +140,59 @@ export default {
     control() {
       this.isCollapse = !this.isCollapse;
     },
-     /**
+    /**
      * 侧边栏点击添加tab标签页
      */
-    handleTabsEdit(targetName, action) {
-        if (action === 'add') {
-          let newTabName = ++this.tabIndex + '';
-          this.editableTabs.push({
-            title: 'New Tab',
-            name: newTabName,
-            content: 'New Tab content'
-          });
-          this.editableTabsValue = newTabName;
-        }
-        if (action === 'remove') {
-          let tabs = this.editableTabs;
-          let activeName = this.editableTabsValue;
-          if (activeName === targetName) {
-            tabs.forEach((tab, index) => {
-              if (tab.name === targetName) {
-                let nextTab = tabs[index + 1] || tabs[index - 1];
-                if (nextTab) {
-                  activeName = nextTab.name;
-                }
-              }
-            });
-          }
-          
-          this.editableTabsValue = activeName;
-          this.editableTabs = tabs.filter(tab => tab.name !== targetName);
-        }
+    addTab(items,indexs) {
+      console.log(items,indexs)
+      let that=this;//用that保存this的指向
+      function checkTabs(tabsIndex){//当tabs标签名==当前点击的菜单名时返回结果
+        return tabsIndex.title == items.listName
       }
+      let valueIndex = that.editableTabs.findIndex(checkTabs)//当数组中的元素在测试条件时返回true时,findIndex()返回符合条件的元素的索引位置，之后的值不会再调用执行函数
+      let newTabName = valueIndex+1 + ""; 
+      if(valueIndex==-1){//如果没有符合条件的元素返回-1时进行添加
+        let newTabName = ++that.tabIndex + '';//将下标赋值给tabs的index
+        that.editableTabs.push({//将获取的值push进tabs数组
+                title: items.listName,//tabs标签名
+                name: newTabName,//该选项卡在选项卡列表中的顺序值，如第一个选项卡则为'1'
+                content: items.listName//tabs标签内容
+            });
+      }else{
+        newTabName = that.editableTabs[valueIndex].name; //使用editableTabs数组中name指定tab标签页位置
+      }
+
+      that.editableTabsValue = newTabName;//将默认位置换成新增的tabs的name
+      sessionStorage.setItem('tabsName',JSON.stringify(that.editableTabs)),//存储tabs标签名,必须要转换成字符串，不然就是[object,object]
+      sessionStorage.setItem('tabsIndex',newTabName)//保存tabs的位置信息即tabs的name
+
+    },
+    /**
+     * 点击tabs标签页时，路由对应跳转
+     */
+    jumpRouter(){
+      
+    },
+    /**
+     * 点击移除tabs标签
+    */
+    removeTab(targetName) {
+      let tabs = this.editableTabs;
+      let activeName = this.editableTabsValue;
+      if (activeName === targetName) {
+        tabs.forEach((tab, index) => {
+          if (tab.name === targetName) {
+            let nextTab = tabs[index + 1] || tabs[index - 1];
+            if (nextTab) {
+              activeName = nextTab.name;
+            }
+          }
+        });
+      }
+      this.editableTabsValue = activeName;
+      this.editableTabs = tabs.filter(tab => tab.name !== targetName);
     }
-  
+  }
 };
 </script>
 <style scoped lang='less'>
@@ -187,18 +218,19 @@ a {
   background-color: #fff;
   line-height: 60px;
   padding: 0px 0px;
-  .left{
-    width:200px;
-  .switch {
-      float:left;
+  .left {
+    width: 100px;
+    .switch {
+      float: left;
     }
   }
-  /deep/.tabs{
-    height:60px;
-    overflow:hidden;
+  /deep/.tabs {
+    height: 60px;
+    overflow: hidden;
+    max-width: 70%;
   }
   /deep/ .right {
-    width:200px;
+    width: 200px;
     display: flex;
     justify-content: flex-end;
   }
