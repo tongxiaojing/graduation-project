@@ -6,19 +6,31 @@ export default
     [
         {
             path: '/ChangePass',
-            component: ChangePass
+            name: ChangePass,
+            components:{
+                right:ChangePass
+            }
         },
         {
             path: '/ClassManage',
-            component: ClassManage
+            name:  ClassManage,
+            components:{
+                right: ClassManage
+            }
         },
         {
             path: '/StudentManage',
-            component: StudentManage
+            name: StudentManage,
+            components:{
+                right:StudentManage
+            }
         },
         {
             path: '/TeacherManage',
-            component: TeacherManage
+            name: TeacherManage,
+            components:{
+                right:TeacherManage
+            }
         }
 
     ]

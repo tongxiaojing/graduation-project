@@ -1,3 +1,5 @@
 <template>
-    <div><h1>教师管理</h1></div>
+    <div id="user-teacher">
+        <h1>教师管理</h1>
+    </div>
 </template>

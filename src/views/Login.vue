@@ -1,5 +1,5 @@
 <template>
-  <div id="bg">
+  <div id="user-login">
     <div id="login">
       <el-form status-icon class="login-ruleForm" :rules="rules" ref="loginForm" :model="loginForm">
         <el-form-item>
@@ -30,37 +30,31 @@
   </div>
 </template>
 <script>
-import Cookie from "../util/Cookie.js";
-import Base64 from "../util/Base64.js";
+import Cookie from "@/util/Cookie.js";
+import Base64 from "@/util/Base64.js";
 export default {
   data() {
     return {
       loading:false,//记住图标状态
       checked: false,//记住登录状态
       userToken: "",
-      loginForm: {
-        userMobile: "",
-        userPassword: ""
+      loginForm: {//存储表单提交数据
+        userMobile: "",//用户账号
+        userPassword: ""//用户密码
       },
       rules: {
         userMobile: [{ required: true, message: '请输入电话号码', trigger: 'blur'}],//离开时验证输入框是否为空
-        userPassword: [{ required: true, message: '请输入邮箱地址', trigger: 'blur'}]
+        userPassword: [{ required: true, message: '请输入密码', trigger: 'blur'}]
       }
     };
   },
-  created() {
-    //当用户记住密码时，将cookie里面的值赋值给表单，不需用户再次操作
-    if(Cookie.getCookie("mobile") && Cookie.getCookie("pass")){
-      this.checked=true;//按钮应为选中状态
-      let mobile = Base64.decode(Cookie.getCookie("mobile"));//获取存储的cookie并进行解密
-      let pass = Base64.decode(Cookie.getCookie("pass"));
-      this.loginForm.userMobile = mobile;//将解密后的的值赋给表单
-      this.loginForm.userPassword = pass;
-    }
-   
-  },
   methods: {
-    submitForm: function(formName) {
+    /**
+     * 登录表单的验证
+     * @userMobile是用户号码
+     * @userPassword是用户密码
+     */
+    submitForm(formName) {
       let that = this;//保存当前this的指向
       that.loading=true;//改变当前按钮状态
       that.axios
@@ -72,7 +66,7 @@ export default {
         })
         .then(res => {
           console.log(res);
-          that.loading=false;
+          that.loading=false;//登录按钮状态应改为可用
           that.$router.push("/home");//登陆成功之后跳转至主页面
           that.userToken = res.data.token_type +' '+ res.data.access_token;//将后台返回的令牌存储起来
           sessionStorage.setItem('token',that.userToken)
@@ -99,18 +93,29 @@ export default {
         })
         .catch(error => {
           console.log(error);
-          that.loading=false;
+          that.loading=false;//登录按钮状态应改为可用
           that.$message({
             message: "账户名或者密码错误，登录失败",
             type: "warning"
           });
         });
     }
+  },
+  created() {
+    //当用户记住密码时，将cookie里面的值赋值给表单，不需用户再次操作
+    if(Cookie.getCookie("mobile") && Cookie.getCookie("pass")){
+      this.checked=true;//按钮应为选中状态
+      let mobile = Base64.decode(Cookie.getCookie("mobile"));//获取存储的cookie并进行解密
+      let pass = Base64.decode(Cookie.getCookie("pass"));
+      this.loginForm.userMobile = mobile;//将解密后的的值赋给表单
+      this.loginForm.userPassword = pass;
+    }
+   
   }
 };
 </script>
 <style scoped lang="less">
-#bg {
+#user-login {
   position: absolute;
   background-image: url("../assets/hua.jpg");
   width: 100%;

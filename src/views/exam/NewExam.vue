@@ -1,3 +1,5 @@
 <template>
-    <div><h1>出卷</h1></div>
+    <div id="exam-new">
+        <h1>出卷</h1>
+    </div>
 </template>
