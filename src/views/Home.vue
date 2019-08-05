@@ -132,14 +132,6 @@ export default {
   },
   created(){
     let that=this;
-    // 侧边栏结构不同,用option自己拼接成单独数组对象
-    // that.listData.forEach(item => {
-    //   item.option.forEach(item => {
-    //     that.tabsList.push(item);
-    //     console.log(that.tabsList)
-    //   });
-    // });
-
     let tabsName=JSON.parse(sessionStorage.getItem('editableTabs'));//将存储的信息解析成json格式并赋给变量
     let tabsIndex=sessionStorage.getItem('tabsIndex');//获取tabs的下标
     if(tabsName && tabsIndex){//如果会话当中有值，就提取出来
