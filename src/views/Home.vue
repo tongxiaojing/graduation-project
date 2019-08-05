@@ -1,14 +1,15 @@
 <template>
   <div id="home">
-    <el-container>
+    <el-container style="height: 100%;position: relative;">
       <el-aside width="auto">
         <el-menu
           class="el-menu-vertical-demo"
           :collapse="!isCollapse"
           :default-openeds="['1','2']"
+          :default-active="$route.path"
+          router
           background-color="#3A3D4C"
           text-color="#ffff"
-          active-text-color="#fff"
         >
           <el-menu-item style="text-align:left;">
             <img src="../assets/logo.png" alt width="auto" height="40px" />
@@ -23,10 +24,11 @@
             <el-menu-item-group>
               <el-menu-item v-for="(items,indexs) in item.titles" 
               :key="indexs"
-               @click="addTab(items,indexs)"
-               class="aTabs"
+              @click="addTab(items,indexs)"
+              class="aTabs"
+              :index="items.path"
                >
-                <router-link :to="items.route">{{items.listName}}</router-link>
+              {{items.listName}}
               </el-menu-item>
             </el-menu-item-group>
           </el-submenu>
@@ -38,7 +40,7 @@
             <!-- 折叠按钮 -->
             <div class="left">
               <el-button
-               @click="control" 
+               @click="control"   
                size="mini" 
                class="switch"
                >
@@ -52,13 +54,13 @@
               <el-tabs
                 v-model="editableTabsValue"
                 type="card"
-                closable
                 @tab-click="jumpRouter"
                 @tab-remove="removeTab"
               >
                 <el-tab-pane
-                  v-for="item in editableTabs"
+                  v-for="(item,index) in editableTabs"
                   :key="item.name"
+                  :closable="index>0"
                   :label="item.title"
                   :name="item.name"
                 ></el-tab-pane>
@@ -101,24 +103,25 @@ export default {
         {
           title: "基础模块", //基础模块数据
           titles: [
-            { listName: "首页", route: "/home" },
-            { listName: "教师管理", route: "/TeacherManage" },
-            { listName: "班级管理", route: "/ClassManage" },
-            { listName: "学生管理", route: "/StudentManage" },
-            { listName: "更改密码", route: "/ChangePass" }
+            { listName: "首页", path: "/home" },
+            { listName: "教师管理", path: "/TeacherManage" },
+            { listName: "班级管理", path: "/ClassManage" },
+            { listName: "学生管理", path: "/StudentManage" },
+            { listName: "更改密码", path: "/ChangePass" }
           ]
         },
         {
           title: "在线测试", //在线测试模块数据
           titles: [
-            { listName: "试卷录入", route: "/NewExam" },
-            { listName: "批阅试卷", route: "/MarkPaper" },
-            { listName: "试卷管理", route: "/ExamManage" },
-            { listName: "查看成绩", route: "/Score" },
-            { listName: "考试安排", route: "/ExamArrange" }
+            { listName: "试卷录入", path: "/NewExam" },
+            { listName: "批阅试卷", path: "/MarkPaper" },
+            { listName: "试卷管理", path: "/ExamManage" },
+            { listName: "查看成绩", path: "/Score" },
+            { listName: "考试安排", path: "/ExamArrange" }
           ]
         }
       ],
+      tabsList:[],//用于保存二级菜单的数组
       editableTabsValue: "1",//默认标签页的位置
        editableTabs: [//标签页内容数组
         {
@@ -132,11 +135,15 @@ export default {
   },
   created(){
     let that=this;
+    that.listData.forEach(item =>{
+      that.tabsList.push(...item.titles)//获取二级菜单的数组对象
+    })
     let tabsName=JSON.parse(sessionStorage.getItem('editableTabs'));//将存储的信息解析成json格式并赋给变量
-    let tabsIndex=sessionStorage.getItem('tabsIndex');//获取tabs的下标
+    let openIndex = sessionStorage.getItem('openIndex')//获取存储的最后打开的标签页
+    let tabsIndex=sessionStorage.getItem('tabsIndex');//获取最后新增并存储的tabs的下标
     if(tabsName && tabsIndex){//如果会话当中有值，就提取出来
         that.editableTabs=tabsName;
-        that.editableTabsValue=tabsIndex;
+        that.editableTabsValue=openIndex;
         that.tabIndex=Number(tabsIndex)
     }
   },
@@ -149,21 +156,22 @@ export default {
     },
     /**
      * 侧边栏点击添加tab标签页
+     * @paneIndex是传回来的数组对象
+     * @valueIndex是检索之后传回来的下标
+     * @newTabName是新增tabs的下标
      */
     addTab(items,indexs) {
       //console.log(items,indexs)
       let that=this;//用that保存this的指向
-      function checkTabs(tabsIndex){//当tabs标签名==当前点击的菜单名时返回结果
-        return tabsIndex.title == items.listName
+      function checkTabs(paneIndex){//当tabs标签名==当前点击的菜单名时返回结果
+        return paneIndex.title == items.listName
       }
       let valueIndex = that.editableTabs.findIndex(checkTabs)//当数组中的元素在测试条件时返回true时,findIndex()返回符合条件的元素的索引位置，之后的值不会再调用执行函数
-      let newTabName = valueIndex + 1 + ""; 
+      let  newTabName = ++that.tabIndex + "";//将下标赋值给tabs的index
       if(valueIndex == -1){//如果没有符合条件的元素返回-1时进行添加
-        newTabName = ++that.tabIndex + "";//将下标赋值给tabs的index
         that.editableTabs.push({//将获取的值push进tabs数组
                 title: items.listName,//tabs标签名
-                name: newTabName,//该选项卡在选项卡列表中的顺序值，如第一个选项卡则为'1'
-                content: items.listName//tabs标签内容
+                name: newTabName//该选项卡在选项卡列表中的顺序，如第一个选项卡则为'1'
             });
       }else {
         newTabName = that.editableTabs[valueIndex].name; //使用editableTabs数组中name指定tab标签页位置
@@ -174,20 +182,29 @@ export default {
       JSON.stringify(that.editableTabs)
       );//存储tabs标签名,必须要转换成字符串，不然就是[object,object]
       sessionStorage.setItem('tabsIndex',newTabName);//保存tabs的位置信息即tabs的name
-
+      sessionStorage.setItem('openIndex',that.editableTabsValue)
     },
     /**
      * 点击tabs标签页时，路由对应跳转
      */
     jumpRouter(targetIndex){
-      console.log(targetIndex)
+      let that = this;
+      that.tabsList.forEach(item =>{ //遍历二级菜单栏的数组 
+            if(targetIndex.label == item.listName){
+              that.$router.replace(item.path)
+              that.editableTabsValue =targetIndex.name//将当前点击的tabs的name赋值给editableTabsValue
+              sessionStorage.setItem('openIndex',that.editableTabsValue)//存储当前选中的tabs位置信息
+            }
+      })
     },
     /**
      * 点击移除tabs标签
     */
     removeTab(targetName) {
-      let tabs = this.editableTabs;
-      let activeName = this.editableTabsValue;
+      let that = this;
+      let tabs = that.editableTabs;
+      let activeName = that.editableTabsValue;
+      console.log(activeName)
       if (activeName === targetName) {
         tabs.forEach((tab, index) => {
           if (tab.name === targetName) {
@@ -198,13 +215,16 @@ export default {
           }
         });
       }
-      this.editableTabsValue = activeName;
-      this.editableTabs = tabs.filter(tab => tab.name !== targetName);
+      that.editableTabsValue = activeName;
+      that.editableTabs = tabs.filter(tab => tab.name !== targetName);
     }
   }
 };
 </script>
 <style scoped lang='less'>
+ /deep/ .el-menu{
+      border-right:none;
+    }
 #home{
   height: 100%;
 //侧边栏
@@ -212,48 +232,33 @@ export default {
   color: #fff;
   text-align: center;
   line-height: 200px;
-  height:100%;
   background-color:#3A3D4C;
+  // height: 98vh;
+  // overflow-x:auto;
   //菜单栏
   .el-menu-vertical-demo:not(.el-menu--collapse) {
     width: 200px;
      /deep/.el-submenu__title,.el-menu-item{
+      overflow: hidden;
       color:white;
+    
     }
-    .aTabs{
-      /deep/ a {
-      text-decoration: none;
-      display: block;
-      color: #ccc;
-      &.router-link-exact-active {
-        &.router-link-active {
-          position: relative;
-          z-index: 2;
+   
+    /deep/ .aTabs{
+      &.is-active {
           color: #0DD7DC;
           font-size: 15px;
-          &::before {//小三角形用:after  :before伪类来实现
-            content: "";
-            position: absolute;
-            top: 0;
-            left: -40px;
-            width: 200px;
-            height: 100%;
-            z-index: -1;
-          }
           &::after {
             content: "";
             position: absolute;
             top: 12.5px;
-            right: -45px;
+            right: 0;
             width: 0;
             height: 0;
             border: 10px solid transparent;
             border-right: 10px solid #fff;
-            z-index: -1;
           }
-        }
-      }
-    }
+       }
     }
   }
 }
@@ -267,13 +272,13 @@ export default {
   line-height: 60px;
   padding:0px 0px;
   .left {
-    width: 100px;
     .switch {
       float: left;
     }
   }
   /deep/.tabs {
     height: 60px;
+    flex: 1;
     overflow: hidden;
     max-width: 70%;
     .el-tabs__item{
@@ -286,7 +291,6 @@ export default {
   }
   }
   /deep/ .right {
-    width: 200px;
     display: flex;
     justify-content: flex-end;
   }
@@ -306,4 +310,6 @@ export default {
   padding: 0px;
 }
 }
+
+// /deep/  >>>   可用这两个东西进行深度覆盖
 </style>

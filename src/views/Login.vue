@@ -37,7 +37,8 @@ export default {
     return {
       loading:false,//记住图标状态
       checked: false,//记住登录状态
-      userToken: "",
+      userToken: "",//存储令牌
+      uid:'',//存储用户Id
       loginForm: {//存储表单提交数据
         userMobile: "",//用户账号
         userPassword: ""//用户密码
@@ -69,7 +70,9 @@ export default {
           that.loading=false;//登录按钮状态应改为可用
           that.$router.push("/home");//登陆成功之后跳转至主页面
           that.userToken = res.data.token_type +' '+ res.data.access_token;//将后台返回的令牌存储起来
+          that.uid = res.data.profile.userUserTypeId
           sessionStorage.setItem('token',that.userToken)
+          sessionStorage.setItem('uid',that.uid)
           this.$message({
             message: "登录成功",
             type: "success"
