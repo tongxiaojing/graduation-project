@@ -16,13 +16,14 @@
   text-align: center;
   color: #2c3e50;
 }
-body{
+body,html{
   width: 100%;
   height: 100%;
   padding: 0;
   margin: 0;
 }
 #nav {
+  height:100%;
   a {
     font-weight: bold;
     color: #2c3e50;
