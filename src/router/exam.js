@@ -7,35 +7,30 @@ export default
    [
         {
             path: '/NewExam',
-            name: NewExam,
             components:{
                 right:NewExam
             }
         },
         {
             path: '/MarkPaper',
-            name: MarkPaper,
             components:{
                 right:MarkPaper
             }
         },
         {
             path: '/ExamManage',
-            name: ExamManage,
             components:{
                 right:ExamManage
             }
         },
         {
             path: '/Score',
-            name: Score,
             components:{
                 right:Score
             }
         },
         {
             path: '/ExamArrange',
-            name: ExamArrange,
             components:{
                 right:ExamArrange
             }
