@@ -18,12 +18,10 @@ new Vue({
 //携带token访问接口
 axios.interceptors.request.use(
   function (config) {
-    // 拦截每次请求,携带token
     config.headers.Authorization = sessionStorage.getItem('token')
     return config
   },
   function (error) {
-    // Do something with request error
     return Promise.reject(error)
   }
 )
