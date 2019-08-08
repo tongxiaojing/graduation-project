@@ -1,6 +1,8 @@
 <template>
   <div id="user-pass">
-    <h1>修改密码</h1>
+    <div slot="header" class="clearfix">
+      <h1>修改密码</h1>
+    </div>
     <el-form
       :model="ruleForm"
       status-icon
@@ -28,6 +30,7 @@
 <script>
 export default {
   data() {
+    //验证两次输入密码是否一致
     var validatePass2 = (rule, value, callback) => {
       if (value === "") {
         callback(new Error("请再次输入密码"));
@@ -39,9 +42,9 @@ export default {
     };
     return {
       ruleForm: {
-        oldPass: "",
-        newPass: "",
-        checkPass: ""
+        oldPass: "", //旧密码
+        newPass: "", //新密码
+        checkPass: "" //确认密码
       },
       rules: {
         oldPass: [
@@ -62,52 +65,83 @@ export default {
             trigger: ["blur", "change"]
           }
         ],
-       // checkPass: [{ required: true, message: "请输入密码", trigger: "blur" }],
-        checkPass: [{ required: true, validator: validatePass2, trigger: "blur" }]
+        checkPass: [
+          { required: true, validator: validatePass2, trigger: "blur" }
+        ]
       }
     };
   },
   methods: {
+    /**
+     *修改密码提交表单
+     *@param {object} formName 表单对象
+     **/
     submitForm(formName) {
-        let that = this;
+      let that = this;
       that.$refs[formName].validate(valid => {
         if (valid) {
-        that.$confirm('是否确认修改密码？', '是否继续?', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }).then(() => {
-            that.axios
-            .get("/User/ModifyPassword",{
-                params:{
-                    uid:sessionStorage.getItem('uid'),
-                    oldPassword:that.ruleForm.oldPass,
-                    newPassword:that.ruleForm.newPass
-                }
+          that
+            .$confirm("是否确认修改密码？", "是否继续?", "提示", {
+              confirmButtonText: "确定",
+              cancelButtonText: "取消",
+              type: "warning"
             })
-            .then(res =>{
-                console.log(res)
-                // that.$message({
-                //     type: 'success',
-                //     message: '删除成功!'
-                // });
+            .then(() => {
+              that.axios
+                .get("User/ModifyPassword", {
+                  params: {
+                    uid: sessionStorage.getItem("uid"), //携带用户ID
+                    oldPassword: that.ruleForm.oldPass, //旧密码
+                    newPassword: that.ruleForm.newPass //新密码
+                  }
+                })
+                .then(res => {
+                  console.log(res);
+                  var type = "warning"; //判断状态类型
+                  var message = "其它错误"; //接收错误信息
+                  //根据返回的code值判断当前请求状态
+                  switch (res.data.code) {
+                    case -1: //code=-1 系统异常
+                      message = res.data.message;
+                      break;
+                    case -2: // code=-2 参数错误
+                      break;
+                    case 0: //code=0 数据没有任何变化
+                      message = res.data.message;
+                      type = "info";
+                      break;
+                    case 1: //code=1 成功
+                      message = res.data.message;
+                      type = "success";
+                      break;
+                    default:
+                      message = res.data.message;
+                      break;
+                  }
+                  if (res.data.code == 1) {
+                    that.$message({
+                      type: "success",
+                      message: "修改成功!"
+                    });
+                  }
+                })
+                .catch(error => {
+                  console.log(error);
+                });
             })
-            .catch(error =>{
-                console.log(error)
-            })
-         
-        }).catch(() => {
-          that.$message({
-            type: 'info',
-            message: '已取消删除'
-          });          
-        });
+            .catch(err => {
+              that.$message({
+                type: "info",
+                message: "已取消删除"
+              });
+            });
         } else {
           console.log("error submit!!");
           return false;
         }
       });
     },
+    //重置表单
     resetForm(formName) {
       that.$refs[formName].resetFields();
     }

@@ -52,14 +52,13 @@ export default {
   methods: {
     /**
      * 登录表单的验证
-     * @userMobile是用户号码
-     * @userPassword是用户密码
+     * @param {Object} formName 表单对象
      */
     submitForm(formName) {
       let that = this;//保存当前this的指向
       that.loading=true;//改变当前按钮状态
       that.axios
-        .get("/OAuth/authenticate", {
+        .get("OAuth/authenticate", {
           params: {//把用户信息传向后台
             userMobile: that.loginForm.userMobile,
             userPassword: that.loginForm.userPassword
@@ -70,8 +69,8 @@ export default {
           that.loading=false;//登录按钮状态应改为可用
           that.$router.push("/home");//登陆成功之后跳转至主页面
           that.userToken = res.data.token_type +' '+ res.data.access_token;//将后台返回的令牌存储起来
-          that.uid = res.data.profile.userUid
-          sessionStorage.setItem('token',that.userToken)
+          that.uid = res.data.profile.userUid //后台返回用户Id
+          sessionStorage.setItem('token',that.userToken)//存储操作
           sessionStorage.setItem('uid',that.uid)
           this.$message({
             message: "登录成功",

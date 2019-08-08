@@ -63,13 +63,13 @@
             </div>
             <!-- 用户信息 -->
             <div class="right">
-              <span style="color:black;padding-right:10px;">王麻子</span>
+              <span style="color:white;padding-right:10px;">王麻子</span>
               <el-dropdown>
-                <i class="el-icon-setting" style="margin-right: 15px"></i>
+                <i class="el-icon-setting" style="margin-right:15px;color:white;"></i>
                 <el-dropdown-menu slot="dropdown">
-                  <el-dropdown-item>查看</el-dropdown-item>
-                  <el-dropdown-item>新增</el-dropdown-item>
-                  <el-dropdown-item>退出登录</el-dropdown-item>
+                  <el-dropdown-item>个人中心</el-dropdown-item>
+                  <el-dropdown-item>查看信息</el-dropdown-item>
+                  <el-dropdown-item @click.native="handlelayOut">退出登录</el-dropdown-item>
                 </el-dropdown-menu>
               </el-dropdown>
               <!-- 用户头像 -->
@@ -78,8 +78,18 @@
             </div>
           </el-header>
           <el-main>
+            <!-- 面包屑导航 -->
+            <el-breadcrumb separator-class="el-icon-arrow-right">
+              <el-breadcrumb-item :to="{ path: '/home' }">首页</el-breadcrumb-item>
+              <el-breadcrumb-item>基础数据</el-breadcrumb-item>
+              <el-breadcrumb-item>在线测试</el-breadcrumb-item>
+            </el-breadcrumb>
             <keep-alive>
-              <router-view name="right"></router-view>
+              <el-card class="box-card" shadow="always">
+                <div class="text item">
+                  <router-view name="right"></router-view>
+                </div>
+              </el-card>
             </keep-alive>
           </el-main>
         </el-container>
@@ -125,7 +135,7 @@ export default {
           name: "/home" //标签内容位置
         }
       ]
-     // tabIndex: 1 //添加时从下标1开始，因为首页是默认占位的
+      // tabIndex: 1 //添加时从下标1开始，因为首页是默认占位的
     };
   },
   created() {
@@ -143,39 +153,62 @@ export default {
   },
   methods: {
     /**
+     * 退出登录操作
+     */
+    async handlelayOut() {
+      var that = this;
+      that
+        .$confirm("确认退出吗, 是否继续?", "提示", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning"
+        })
+        .then(() => {
+          sessionStorage.clear(); //清除缓存
+          that.$router.push("/"); //重新跳转
+        })
+        .catch(() => {
+          that.$message({
+            type: "info",
+            message: "已取消退出"
+          });
+        });
+    },
+    /**
      *  控制折叠或是合上
      * */
     control() {
-      this.isCollapse = !this.isCollapse;//控制合上还是打开
+      this.isCollapse = !this.isCollapse; //控制合上还是打开
     },
     /**
      * 侧边栏点击添加tab标签页
-     * @paneIndex是传回来的数组对象
-     * @valueIndex是检索之后传回来的下标
-     * @newTabName是新增tabs的下标
+     * @param {string} listTitle 二级菜单的title
+     * @param {string} path 是路径
+     * @param {string} newTabName 是新增tabs的路径
      */
     addTab(listTitle, path) {
       let that = this; //用that保存this的指向
       let newTabName = path; //绑定当前菜单的路径到新增tag标签页上
       //console.log(newTabName)
-      that.editableTabsValue = newTabName;//将新增的tabs标签页默认选中
+      that.editableTabsValue = newTabName; //将新增的tabs标签页默认选中
       let valueIndex = that.editableTabs.findIndex(item => {
         return item.title == listTitle;
-      }); //使用findIndex 方法查找打开的标签页里面有没有要打开的目标标签;
+      }); //使用findIndex 方法查找打开的标签页里面有没有要打开的目标标签,有的话返回下标，没有返回-1;
       if (valueIndex == -1) {
         that.editableTabs.push({
           title: listTitle,
           name: newTabName
         });
       } else {
-        //如果要打开的目标标签页已经在打开的标签页数组中，就让选中标签变成目标标签
+        //如果要打开的目标标签页已经在打开的标签页数组中，就赋值给选中标签
         that.editableTabsValue = that.editableTabs[valueIndex].name;
       }
-      sessionStorage.setItem("tabsName", JSON.stringify(that.editableTabs));//保留用户操作
+      sessionStorage.setItem("tabsName", JSON.stringify(that.editableTabs)); //保留用户操作
       sessionStorage.setItem("openIndex", that.editableTabsValue);
     },
     /**
      * 点击tabs标签页时，路由对应跳转
+     * @param {object} targetIndex 数组对象
      */
     jumpRouter(targetIndex) {
       let that = this;
@@ -193,23 +226,23 @@ export default {
      */
     removeTab(targetName) {
       let that = this;
-      let tabs = that.editableTabs;//得到tabs数组对象
-      let activeName = that.editableTabsValue;//得到现在tab标签页默认位置
+      let tabs = that.editableTabs; //得到tabs数组对象
+      let activeName = that.editableTabsValue; //得到现在tab标签页默认位置
       //console.log(activeName);
       if (activeName === targetName) {
         tabs.forEach((tab, index) => {
           if (tab.name === targetName) {
             let nextTab = tabs[index + 1] || tabs[index - 1];
             if (nextTab) {
-              activeName = nextTab.name;//得到当前位置的下标
+              activeName = nextTab.name; //得到当前选中位置的下标
             }
           }
         });
       }
-      that.editableTabsValue = activeName;//将现在tab标签页默认位置重新赋值
+      that.editableTabsValue = activeName; //将现在tab标签页默认位置重新赋值
       that.editableTabs = tabs.filter(tab => tab.name !== targetName);
-      sessionStorage.setItem('tabsName',JSON.stringify(that.editableTabs))//重新保存tabs标签页的数组，保留当前操作
-      that.$router.replace(that.editableTabsValue)//路由删除对应跳转
+      sessionStorage.setItem("tabsName", JSON.stringify(that.editableTabs)); //重新保存tabs标签页的数组，保留当前操作
+      that.$router.replace(that.editableTabsValue); //删除之后，路由对应跳转
     }
   }
 };
@@ -226,8 +259,6 @@ export default {
     text-align: center;
     line-height: 200px;
     background-color: #3a3d4c;
-    // height: 98vh;
-    // overflow-x:auto;
     //菜单栏
     .el-menu-vertical-demo:not(.el-menu--collapse) {
       width: 200px;
@@ -236,12 +267,11 @@ export default {
         overflow: hidden;
         color: white;
       }
-
       /deep/ .aTabs {
         &.is-active {
           color: #0dd7dc;
           font-size: 15px;
-          background-color:rgba(9, 35, 75, 0.5)!important;
+          background-color: rgba(9, 35, 75, 0.5) !important;
           &::after {
             content: "";
             position: absolute;
@@ -250,7 +280,7 @@ export default {
             width: 0;
             height: 0;
             border: 10px solid transparent;
-            border-right: 10px solid #fff;
+            border-right: 10px solid #0dd7dc;
           }
         }
       }
@@ -258,6 +288,7 @@ export default {
   }
   //头部导航栏
   .el-header {
+    //overflow: hidden;
     width: 100%;
     display: flex;
     justify-content: space-between;
@@ -300,7 +331,25 @@ export default {
     }
   }
   .el-main {
-    padding: 0px;
+    padding: 0;
+    &.el-main {
+      //面包屑导航样式
+      /deep/ .el-breadcrumb {
+        font-size: 16px !important;
+        line-height: 2;
+        text-indent: 1em;
+      }
+      .el-card__body{
+        margin-top:5%;
+        height: 100%;
+      .text {
+        font-size: 14px;
+      }
+      .item {
+        margin-bottom: 18px;
+      }
+      }
+    }
   }
 }
 
