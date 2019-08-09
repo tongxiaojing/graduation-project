@@ -74,7 +74,7 @@ export default {
   methods: {
     /**
      *修改密码提交表单
-     *@param {object} formName 表单对象
+     *@param {Object} formName 表单对象
      **/
     submitForm(formName) {
       let that = this;

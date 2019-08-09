@@ -65,13 +65,14 @@ export default {
           }
         })
         .then(res => {
-          console.log(res);
+          console.log(res.data);
           that.loading=false;//登录按钮状态应改为可用
           that.$router.push("/home");//登陆成功之后跳转至主页面
           that.userToken = res.data.token_type +' '+ res.data.access_token;//将后台返回的令牌存储起来
           that.uid = res.data.profile.userUid //后台返回用户Id
           sessionStorage.setItem('token',that.userToken)//存储操作
           sessionStorage.setItem('uid',that.uid)
+          sessionStorage.setItem('user',res.data.profile.userName)
           this.$message({
             message: "登录成功",
             type: "success"
@@ -80,12 +81,12 @@ export default {
             Cookie.setCookie(
               "mobile",
               Base64.encode(that.loginForm.userMobile),//加密操作
-              { maxAge: 60*60*24 }//设置存储时长
+              { maxAge: 60*60*60*24 }//设置存储时长
             );
             Cookie.setCookie(
               "pass",
               Base64.encode(that.loginForm.userPassword),
-              { maxAge: 60*60*24 }
+              { maxAge: 60*60*60*24 }//设置存储时长
             );
           }else{
             //当用户勾选不记住密码时，清除cookie里面的值

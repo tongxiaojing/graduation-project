@@ -8,14 +8,24 @@
       </el-button>
     </div>
     <!-- 班级信息表格 -->
-    <el-table :data="tableData" height="90vh" style="width: 100%;">
-      <el-table-column prop="classCourseId" label="专业编号" sortable width="100"></el-table-column>
-      <el-table-column prop="courseName" label="专业名称" sortable width="130"></el-table-column>
-      <el-table-column prop="userName" label="任课老师" sortable width="130"></el-table-column>
-      <el-table-column prop="className" label="班级" sortable width="130"></el-table-column>
-      <el-table-column prop="classCreateTime" label="日期" sortable width="120"></el-table-column>
-      <el-table-column prop="classStudents" label="班级人数" sortable width="100"></el-table-column>
-      <el-table-column label="操作" width="180">
+    <el-table
+      :data="tableData"
+      height="70vh"
+      style="width: 100%;"
+      :default-sort="{prop: 'classId', order: 'ascending'}"
+    >
+      <el-table-column type="index" label="编号" width="120" sortable></el-table-column>
+      <el-table-column prop="courseName" label="专业名称" sortable width="160"></el-table-column>
+      <el-table-column prop="userName" label="任课老师" sortable width="160"></el-table-column>
+      <el-table-column prop="className" label="班级" sortable width="160"></el-table-column>
+      <!-- 格式化时间 -->
+      <el-table-column label="日期" sortable width="150">
+        <template slot-scope="scope">
+          <span>{{scope.row.classCreateTime | formatDate}}</span>
+        </template>
+      </el-table-column>
+      <el-table-column prop="classStudents" label="班级人数" sortable width="140"></el-table-column>
+      <el-table-column label="操作" width="150" fixed="right">
         <template slot-scope="scope">
           <el-button size="mini" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
           <el-button
@@ -29,8 +39,8 @@
     </el-table>
     <!-- 点击新增/编辑的dialog -->
     <el-dialog :title="dailogTitleType" :visible.sync="dialogFormVisible">
-      <el-form :model="form" ref="form" :rule="checkRules">
-        <el-form-item label="班级名称" :label-width="formLabelWidth">
+      <el-form :model="form" ref="form" :rules="rules">
+        <el-form-item label="班级名称" :label-width="formLabelWidth" prop="className">
           <el-input v-model="form.className" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="任课教师" prop="userName" :label-width="formLabelWidth">
@@ -39,7 +49,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="课程名称" prop="courseName" :label-width="formLabelWidth">
-          <el-select v-model="form.courseName" placeholder="请选择课程">
+          <el-select v-model="form.courseName" placeholder="请选择课程" @change="selectedCourse">
             <el-option v-for="(items,indexs) in courseInfo" :key="indexs" :value="items.courseName"></el-option>
           </el-select>
         </el-form-item>
@@ -55,6 +65,7 @@
   </div>
 </template>
 <script>
+import { formatDate } from "@/util/formatDate";
 export default {
   data() {
     return {
@@ -86,8 +97,8 @@ export default {
         userName: "", //老师名称
         index: 0 //当前点击的下标
       },
-      formLabelWidth: "120px", //表单大小
-      checkRules: {
+      formLabelWidth: "120px", //输入框大小
+      rules: {
         //验证规则
         className: [
           { required: true, message: "请输入班级名称", trigger: "blur" }
@@ -101,25 +112,20 @@ export default {
       }
     };
   },
-  created() {
+  filters: {
+    formatDate(time) {
+      var date = new Date(time);
+      return formatDate(date, "yyyy-MM-dd");
+    }
+  },
+  mounted() {
     this.getClassInfo(); //获取所有班级信息
     this.getTeachersInfo(); //获取所有教师信息
     this.getCourseInfo(); //获取所有课程信息
   },
   methods: {
     /**
-     * 获取默认选中教师选项
-     * @param {String} userName 下拉框数据
-     */
-    selectedTeacher(userName) {
-      let that = this;
-      let index = that.teachersInfo.findIndex(
-        item => item.userName == userName //遍历数据得到当前选中的下标
-      );
-      that.form.classTeacherId = that.teachersInfo[index].userId; //并赋值给表单对象
-    },
-    /**
-     *获取班级数据
+     *获取所有班级数据
      */
     getClassInfo() {
       let that = this;
@@ -133,6 +139,130 @@ export default {
         });
     },
     /**
+     * 获取所有教师信息
+     */
+    getTeachersInfo() {
+      let that = this;
+      that.axios
+        .get("User/GetTeachers")
+        .then(res => {
+          console.log(res.data);
+          that.teachersInfo = res.data;
+        })
+        .catch(err => {
+          console.log(err);
+        });
+    },
+    /**
+     * 获取所有课程信息
+     */
+    getCourseInfo() {
+      let that = this;
+      that.axios
+        .get("Class/GetAllCourse")
+        .then(res => {
+          console.log(res.data);
+          that.courseInfo = res.data;
+        })
+        .catch(err => {
+          console.log(err);
+        });
+    },
+    /**实现新增班级功能版块*/
+    /**
+     * 获取下拉列表选中教师的ID
+     * @param {String} userName 下拉框数据
+     */
+    selectedTeacher(userName) {
+      let that = this;
+      let index = that.teachersInfo.findIndex(
+        item => {
+          return item.userName == userName;
+        } //遍历数据得到当前选中教师的下标
+      );
+      console.log(index);
+      that.form.classTeacherId = that.teachersInfo[index].userId; //并赋值给表单对象
+    },
+    /**
+     * 获取下拉列表选中课程的ID
+     * @param {String} userName 下拉框数据
+     */
+    selectedCourse(courseName) {
+      let that = this;
+      let indexs = that.courseInfo.findIndex(
+        items => {
+          return items.courseName == courseName;
+        } //遍历数据得到当前选中课程的下标
+      );
+      that.form.classCourseId = that.courseInfo[indexs].courseId; //并赋值给表单对象
+    },
+    /**
+     * 新增班级显示
+     */
+    handleAdd() {
+      let that = this;
+      that.dailogTitleType = "新增班级信息";
+      that.dialogFormVisible = true;
+      // 新增之前把表单数据初始化
+      that.form.className = "";
+      that.form.classCourseId = "";
+      that.form.classId = 0;
+      that.form.classTeacherId = "";
+      that.form.courseName = "";
+      that.form.userName = "";
+      that.form.index = 0;
+    },
+    /**
+     * 新增班级信息
+     * @param {Object} formName 表单对象
+     */
+    addClass(formName) {
+      let that = this;
+      that.$refs[formName].validate(valid => {
+        if (valid) {
+          that.axios
+            .post("Class/AddClass", {
+              className: that.form.className, //要新增的班级名称
+              classCourseId: that.form.classCourseId, //要新增的课程编号
+              classTeacherId: that.form.classTeacherId //要新增的老师编号
+            })
+            .then(res => {
+              let code = res.data.code; //获取后台返回的状态码
+              let data = res.data.data; //保存后台返回的数据
+              if (code == 1) {
+                data.courseName = that.form.courseName; //返回的值需重新赋值，因为后台返回数据不存在专业名称，老师名称
+                data.userName = that.form.userName;
+                that.tableData.unshift(data); //添加到数组的前面
+                that.$message({
+                  message: "新增成功!",
+                  type: "success"
+                });
+                that.dialogFormVisible = false; //将弹框隐藏
+              } else if (code == -1) {
+                that.$message({
+                  message: "系统异常!",
+                  type: "warning"
+                });
+              } else if (code == -2) {
+                that.$message({
+                  message: "参数错误!",
+                  type: "warning"
+                });
+              }
+            })
+            .catch(err => {
+              console.log(err);
+            });
+        } else {
+          that.$message({
+            message: "请输入正确的班级信息",
+            type: "warning"
+          });
+          return false;
+        }
+      });
+    },
+    /**实现编辑功能版块
      * 编辑班级信息
      *@param {Number} index 当前单元格的索引
      *@param {Object} row 表单对象
@@ -212,6 +342,7 @@ export default {
                   message: "修改成功!",
                   type: "success"
                 });
+                that.dialogFormVisible = false; //成功之后把弹框和隐藏
               }
             });
         } else {
@@ -223,23 +354,8 @@ export default {
         }
       });
     },
-    /**
-     * 新增班级显示
-     */
-    handleAdd() {
-      let that = this;
-      that.dailogTitleType = "新增班级信息";
-      that.dialogFormVisible = true;
-    },
-    /**
-     * 新增班级信息
-     */
-    addClass() {
-      let that = this;
-      that.dialogFormVisible = false;
-      console.log("新增班级信息");
-    },
-    /**
+
+    /**删除班级功能版块
      * 删除班级信息
      *@param {Number} index 当前单元格的索引
      *@param {Object} row 表格当前对象
@@ -282,30 +398,6 @@ export default {
             message: "已取消删除"
           });
         });
-    },
-    getTeachersInfo() {
-      let that = this;
-      that.axios
-        .get("User/GetTeachers")
-        .then(res => {
-          console.log(res.data);
-          that.teachersInfo = res.data;
-        })
-        .catch(err => {
-          console.log(err);
-        });
-    },
-    getCourseInfo() {
-      let that = this;
-      that.axios
-        .get("Class/GetAllCourse")
-        .then(res => {
-          console.log(res.data);
-          that.courseInfo = res.data;
-        })
-        .catch(err => {
-          console.log(err);
-        });
     }
   }
 };
@@ -325,6 +417,9 @@ export default {
   #user-class {
     /deep/.el-table .cell {
       text-align: center;
+    }
+    /deep/ .el-dialog {
+      max-width: 480px;
     }
   }
 }

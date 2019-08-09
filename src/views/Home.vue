@@ -63,7 +63,7 @@
             </div>
             <!-- 用户信息 -->
             <div class="right">
-              <span style="color:white;padding-right:10px;">王麻子</span>
+              <span style="color:white;padding-right:10px;">{{this.userName}}</span>
               <el-dropdown>
                 <i class="el-icon-setting" style="margin-right:15px;color:white;"></i>
                 <el-dropdown-menu slot="dropdown">
@@ -103,6 +103,7 @@ export default {
   name: "home",
   data() {
     return {
+      userName: sessionStorage.getItem("user"), //获取当前用户名
       isCollapse: true, //保存折叠状态
       listData: [
         {
@@ -182,9 +183,8 @@ export default {
     },
     /**
      * 侧边栏点击添加tab标签页
-     * @param {string} listTitle 二级菜单的title
-     * @param {string} path 是路径
-     * @param {string} newTabName 是新增tabs的路径
+     * @param {String} listTitle 二级菜单的title
+     * @param {String} path 是路径
      */
     addTab(listTitle, path) {
       let that = this; //用that保存this的指向
@@ -208,7 +208,7 @@ export default {
     },
     /**
      * 点击tabs标签页时，路由对应跳转
-     * @param {object} targetIndex 数组对象
+     * @param {Object} targetIndex 数组对象
      */
     jumpRouter(targetIndex) {
       let that = this;
@@ -228,7 +228,6 @@ export default {
       let that = this;
       let tabs = that.editableTabs; //得到tabs数组对象
       let activeName = that.editableTabsValue; //得到现在tab标签页默认位置
-      //console.log(activeName);
       if (activeName === targetName) {
         tabs.forEach((tab, index) => {
           if (tab.name === targetName) {
@@ -253,6 +252,7 @@ export default {
 }
 #home {
   height: 100%;
+
   //侧边栏
   .el-aside {
     color: #fff;
@@ -332,6 +332,7 @@ export default {
   }
   .el-main {
     padding: 0;
+    overflow: hidden;
     &.el-main {
       //面包屑导航样式
       /deep/ .el-breadcrumb {
@@ -339,16 +340,16 @@ export default {
         line-height: 2;
         text-indent: 1em;
       }
-      .el-card__body{
-        margin-top:5%;
+      .el-card.is-always-shadow {
+        max-width: 97%;
+        max-height: 99%;
+        margin:0 auto;
+        .el-card__body {
+        margin-top: 5%;
         height: 100%;
-      .text {
-        font-size: 14px;
-      }
-      .item {
-        margin-bottom: 18px;
       }
       }
+      
     }
   }
 }
