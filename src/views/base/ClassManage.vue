@@ -39,7 +39,7 @@
     </el-table>
     <!-- 点击新增/编辑的dialog -->
     <el-dialog :title="dailogTitleType" :visible.sync="dialogFormVisible">
-      <el-form :model="form" ref="form" :rules="rules">
+      <el-form :model="form" ref="form" :rules="rules" v-if="dialogFormVisible">
         <el-form-item label="班级名称" :label-width="formLabelWidth" prop="className">
           <el-input v-model="form.className" autocomplete="off"></el-input>
         </el-form-item>
@@ -146,7 +146,7 @@ export default {
       that.axios
         .get("User/GetTeachers")
         .then(res => {
-          console.log(res.data);
+         // console.log(res.data);
           that.teachersInfo = res.data;
         })
         .catch(err => {
@@ -161,7 +161,7 @@ export default {
       that.axios
         .get("Class/GetAllCourse")
         .then(res => {
-          console.log(res.data);
+          //console.log(res.data);
           that.courseInfo = res.data;
         })
         .catch(err => {
@@ -286,7 +286,7 @@ export default {
     updateClass(formName) {
       let that = this;
       that.dialogFormVisible = false;
-      console.log("编辑班级信息");
+     //console.log("编辑班级信息");
       that.$refs[formName].validate(valid => {
         if (valid) {
           that.axios
@@ -297,7 +297,7 @@ export default {
               classTeacherId: that.form.classTeacherId //老师编号
             })
             .then(res => {
-              console.log(res.data.code);
+             // console.log(res.data.code);
               var type = "warning"; //判断状态类型
               var message = "其它错误"; //接收错误信息
               //根据返回的code值判断当前请求状态
@@ -377,7 +377,7 @@ export default {
               }
             })
             .then(res => {
-              console.log(res.data.code);
+              //console.log(res.data.code);
               if (res.data.code == 1) {
                 that.tableData.splice(index, 1); //更新页面
                 that.$message({

@@ -9,7 +9,7 @@ import Vueaxios from 'vue-axios';
 axios.defaults.baseURL = "http://192.168.1.188:12/api/";
 Vue.use(Vueaxios, axios);
 Vue.use(ElementUI);
-Vue.config.productionTip = false
+Vue.config.productionTip = false //阻止启动生产消息，常用作指令
 
 //请求拦截，携带token访问接口
 axios.interceptors.request.use(config => {

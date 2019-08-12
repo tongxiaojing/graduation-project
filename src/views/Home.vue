@@ -110,7 +110,8 @@ export default {
           title: "基础模块", //基础模块数据
           titles: [
             { listName: "首页", path: "/home" },
-            { listName: "教师管理", path: "/TeacherManage" },
+            { listName: "用户管理", path: "/TeacherManage" },
+            { listName: "角色管理", path: "/RoleManage" },
             { listName: "班级管理", path: "/ClassManage" },
             { listName: "学生管理", path: "/StudentManage" },
             { listName: "更改密码", path: "/ChangePass" }
