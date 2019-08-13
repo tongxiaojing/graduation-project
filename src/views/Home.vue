@@ -25,7 +25,7 @@
               <el-menu-item
                 v-for="(items,indexs) in item.titles"
                 :key="indexs"
-                @click="addTab(items.listName,items.path)"
+                @click="addTab(items.listName,items.path,item.title)"
                 class="aTabs"
                 :index="items.path"
               >{{items.listName}}</el-menu-item>
@@ -81,16 +81,13 @@
             <!-- 面包屑导航 -->
             <el-breadcrumb separator-class="el-icon-arrow-right">
               <el-breadcrumb-item :to="{ path: '/home' }">首页</el-breadcrumb-item>
-              <el-breadcrumb-item>基础数据</el-breadcrumb-item>
-              <el-breadcrumb-item>在线测试</el-breadcrumb-item>
+              <el-breadcrumb-item v-show="topNav">{{ topNav }}</el-breadcrumb-item>
             </el-breadcrumb>
-            <keep-alive>
-              <el-card class="box-card" shadow="always">
-                <div class="text item">
+            <el-card class="box-card">
+                <keep-alive>
                   <router-view name="right"></router-view>
-                </div>
-              </el-card>
-            </keep-alive>
+                </keep-alive>
+            </el-card>
           </el-main>
         </el-container>
       </el-main>
@@ -105,6 +102,7 @@ export default {
     return {
       userName: sessionStorage.getItem("user"), //获取当前用户名
       isCollapse: true, //保存折叠状态
+      topNav: '',
       listData: [
         {
           title: "基础模块", //基础模块数据
@@ -187,8 +185,10 @@ export default {
      * @param {String} listTitle 二级菜单的title
      * @param {String} path 是路径
      */
-    addTab(listTitle, path) {
+    addTab(listTitle, path,title) {
       let that = this; //用that保存this的指向
+      that.topNav = listTitle;
+      that.bbb = title;
       let newTabName = path; //绑定当前菜单的路径到新增tag标签页上
       //console.log(newTabName)
       that.editableTabsValue = newTabName; //将新增的tabs标签页默认选中
@@ -213,6 +213,7 @@ export default {
      */
     jumpRouter(targetIndex) {
       let that = this;
+      that.topNav = targetIndex.label;
       that.tabsList.forEach(item => {
         //遍历二级菜单栏的数组
         if (targetIndex.label == item.listName) {
@@ -234,6 +235,7 @@ export default {
           if (tab.name === targetName) {
             let nextTab = tabs[index + 1] || tabs[index - 1];
             if (nextTab) {
+              that.topNav = nextTab.title;//面包屑导航显示当前选中的标题
               activeName = nextTab.name; //得到当前选中位置的下标
             }
           }
@@ -344,13 +346,12 @@ export default {
       .el-card.is-always-shadow {
         max-width: 97%;
         max-height: 99%;
-        margin:0 auto;
+        margin: 0 auto;
         .el-card__body {
-        margin-top: 5%;
-        height: 100%;
+          margin-top: 5%;
+          height: 100%;
+        }
       }
-      }
-      
     }
   }
 }

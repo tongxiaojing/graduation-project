@@ -22,7 +22,7 @@
           <el-button size="mini" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
           <el-button size="mini" type="danger" @click="handleDelete(scope.$index, scope.row)">删除</el-button>
         </template>
-      </el-table-column>
+      </el-table-column>.
     </el-table>
     <!-- 点击新增/编辑的dialog -->
     <el-dialog :title="dailogTitleType" :visible.sync="dialogFormVisible">
@@ -72,6 +72,9 @@ export default {
     this.getRoleInfo(); //获取所有角色信息
   },
   methods: {
+    /**
+     * 获取所有角色信息
+     */
     getRoleInfo() {
       let that = this;
       that.axios
@@ -85,19 +88,56 @@ export default {
     },
     /**
      * 编辑角色
+     * @param {String} index 下标
+     * @param {Object} row 表格对象
      */
-    handleEdit(index, row) {
-      console.log("点击显示编辑");
+    handleEdit(index, row) {   
       let that = this;
       that.dialogFormVisible = true;
       that.submitForm = true;
       that.dailogTitleType = "编辑角色";
-      that.form.userTypeId = row.userTypeId;
+      that.form.id = row.userTypeId;
       that.form.userRoleName = row.userTypeTypeName;
-      that.form.index = row.index;
+      that.form.index = index;
+    },
+    /**
+     * 实现编辑功能
+     * @param {Object} formName 表单对象
+     */
+    updateRole(formName) {
+      let that = this;
+      this.$refs[formName].validate(valid => {
+        if (valid) {
+          that.axios
+            .post("UserType/ModifyUserRole", null, {
+              params: { id: that.form.id, userRoleName: that.form.userRoleName }
+            })
+            .then(res => {
+              if (res.data.code == 1) {
+                let index = that.form.index;
+                that.tableData[index].userTypeTypeName = that.form.userRoleName;
+                that.$message({
+                  message: "修改成功!",
+                  type: "success"
+                });
+                that.dialogFormVisible = false;
+
+              }
+            });
+        } else {
+           that.$message({
+            message: "请输入有效信息!",
+            type: "warning"
+          });
+          console.log("error submit!!");
+          return false;
+        }
+      });
     },
     /**
      * 新增角色
+     * @param {String} index 下标
+     * @param {Object} row 表格对象
      */
     handleAdd(index, row) {
       console.log("点击显示新增");
@@ -109,38 +149,80 @@ export default {
       that.form.index = 0;
     },
     /**
-     * 实现编辑功能
+     * 新增角色功能
      */
-    updateRole(formName) {
+    addRole(formName){
       let that = this;
-      console.log("点击显示编辑");
-      this.$refs[formName].validate(valid => {
-        if (valid) {
-          that.axios
-            .get("UserType/ModifyUserRole", null, {
-              params: {
-                userRoleName: that.form.userRoleName
-              }
+         that.$refs[formName].validate((valid) => {
+          if (valid) {
+            that.axios
+            .post('UserType/AddUserRole',null,{
+              params:{userRoleName:that.form.userRoleName}
             })
-            .then(res => {
-              console.log(res.data.code);
-              if (res.data.code == 1) {
-                let index = that.form.index;
-                that.tableData[index].userTypeTypeName = that.form.userRoleName;
+            .then(res =>{
+              console.log(res.data.code)
+              let data =res.data.data;
+              if(res.data.code==1){
+                data.userRoleName = that.form.userRoleName;
+                that.tableData.push(data)
+                that.$message({
+                  message: "新增成功!",
+                  type: "success"
+                });
                 that.dialogFormVisible = false;
               }
-            });
-        } else {
-          console.log("error submit!!");
-          return false;
-        }
-      });
+            })
+            .catch(err =>{
+              console.log(err)
+            })
+          } else {
+            console.log('error submit!!');
+            return false;
+          }
+        });
     },
     /**
      * 删除角色
      */
     handleDelete(index, row) {
       console.log("点击删除");
+      let that = this;
+      //删除成员提交的请求
+      that
+        .$confirm("此操作将永久删除该用户, 是否继续?", "提示", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning"
+        })
+        .then(() => {
+          that.axios
+            .post("UserType/RemoveUserRole", null, {
+              params: {
+                userRoleId: row.userTypeId
+              }
+            })
+            .then(res => {
+              console.log(res.data.code);
+              if (res.data.code == 1) {
+                that.tableData.splice(index, 1); //更新页面
+                that.$message({
+                  type: "success",
+                  message: "删除成功!"
+                });
+              } else {
+                that.$message({
+                  type: "warning",
+                  message: "删除失败!"
+                });
+              }
+            });
+        })
+        .catch(() => {
+          that.$message({
+            type: "info",
+            message: "已取消删除"
+          });
+        });
     }
   }
 };

@@ -115,13 +115,14 @@ export default {
         }
       ],
       form: {
-        userId: "",//用户ID
-        userUid: "",//用户类别ID
+        userId: "", //用户ID
+        userUid: "", //用户类别ID
         userName: "", //老师名称
         userMobile: "", //手机号
         userSex: "", //性别
         userPassword: "", //密码
-        userUserTypeId: "" ,//角色编号
+        userUserTypeId: "", //角色编号
+        userTypeTypeName:"",//角色名称
         index: 0 //当前点击的下标
       },
       rules: {
@@ -129,7 +130,10 @@ export default {
         userName: [
           { required: true, message: "请输入班级名称", trigger: "blur" }
         ],
-        userMobile: [{ validator: checkPhone, trigger: "blur" }],
+        userMobile: [
+          { required: true, validator: checkPhone, trigger: "blur" }
+        ],
+        userSex: [{ required: true, message: "请选择性别", trigger: "change" }],
         userPassword: [
           { required: true, message: "请输入密码", trigger: "blur" },
           {
@@ -139,7 +143,7 @@ export default {
             trigger: ["blur", "change"]
           }
         ],
-        userUserTypeId: [
+        userTypeTypeName: [
           { required: true, message: "请选择用户角色", trigger: "change" }
         ]
       }
@@ -156,11 +160,9 @@ export default {
      */
     selectedUser(userTypeTypeName) {
       let that = this;
-      let index = that.allRole.find(
-        item => {
-          return item.userTypeTypeName == userTypeTypeName;
-        } 
-      );
+      let index = that.allRole.find(item => {
+        return item.userTypeTypeName == userTypeTypeName;
+      });
       that.form.userUserTypeId = index.userTypeId; //并赋值给表单对象
     },
     /**
@@ -171,7 +173,6 @@ export default {
       that.axios
         .get("UserType/GetUserRoles")
         .then(res => {
-          console.log(res.data);
           that.allRole = res.data;
         })
         .catch(err => {
@@ -199,21 +200,19 @@ export default {
       let that = this;
       that.submitForm = true; //控制调用哪个方法
       (that.dailogTitleType = "编辑用户"), (that.dialogFormVisible = true);
-      console.log(index, row);
       that.form.userUid = row.userUid;
       that.form.userName = row.userName;
       that.form.userMobile = row.userMobile;
       that.form.userSex = row.userSex;
       that.form.userUserTypeId = row.userUserTypeId;
       that.form.userPassword = row.userPassword;
-       that.form.userTypeTypeName = row.userTypeTypeName;
+      that.form.userTypeTypeName = row.userTypeTypeName;
     },
     /**
      * 点击编辑用户
      */
     updateUser(formName) {
-      console.log("编辑用户");
-      let that=this;
+      let that = this;
       that.$refs[formName].validate(valid => {
         if (valid) {
           that.axios
@@ -233,7 +232,8 @@ export default {
                 that.tableData[index].userMobile = that.form.userMobile;
                 that.tableData[index].userSex = that.form.userSex;
                 that.tableData[index].userPassword = that.form.userPassword;
-                that.tableData[index].userTypeTypeName= that.form.userTypeTypeName;
+                that.tableData[index].userTypeTypeName =
+                  that.form.userTypeTypeName;
                 that.$message({
                   message: "修改成功!",
                   type: "success"
@@ -254,7 +254,15 @@ export default {
      */
     handleAdd() {
       let that = this;
+      that.submitForm = false; //控制调用哪个方法
       (that.dailogTitleType = "新增用户"), (that.dialogFormVisible = true);
+      that.form.userUid = 0;
+      that.form.userName = "";
+      that.form.userMobile = "";
+      that.form.userUserTypeId = "";
+      that.form.userTypeTypeName = "";
+      that.form.userPassword = "";
+      that.form.index = 0;
     },
     /**
      * 点击新增用户
@@ -276,11 +284,11 @@ export default {
               console.log(res.data);
               let data = res.data.data; //保存后台返回的数据
               if (res.data.code == 1) {
-                (data.userName = that.form.userName), //新增用户名
+                  (data.userName = that.form.userName), //新增用户名
                   (data.userMobile = that.form.userMobile), //新增用户电话号码
                   (data.userPassword = that.form.userPassword), //新增用户密码
                   (data.userSex = that.form.userSex); //新增用户性别
-                  (data.userTypeTypeName = that.form.userTypeTypeName); //新增用户职称
+                data.userTypeTypeName = that.form.userTypeTypeName; //新增用户职称
                 that.tableData.unshift(data);
                 that.$message({
                   type: "success",
@@ -303,7 +311,10 @@ export default {
               console.log(err);
             });
         } else {
-          console.log(err);
+            that.$message({
+            message: "请输入有效信息!",
+            type: "warning"
+          });
         }
       });
     },
