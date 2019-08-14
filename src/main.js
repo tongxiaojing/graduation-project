@@ -22,21 +22,26 @@ axios.interceptors.request.use(config => {
   return Promise.reject(error)
 })
 /* 响应拦截器 */
-// axios.interceptors.response.use(function (response) { //token过期（20分钟） 
-//    const { status } = error.response;
-//   if (status === 401) {
-//     Message.error("token失效,请重新登录");
-//     //清除token
-//     sessionStorage.clear('token');// 删除已经失效或过期的token
-//     //重新登录
-//     router.push('/login')
-//   } else if (sessionStorage.getItem('mobile')) { // 判断token是否存在，如果存在说明需要更新token
-//     sessionStorage.setItem('token', response.data.token) // 如果存在token，覆盖原来的token
-//   }
-//   return response
-// }, function (error) {
-//   return Promise.reject(error)
-// })
+axios.interceptors.response.use((res) => {
+  // 对响应正确做处理
+  return res
+}, function(error) {
+  // 对响应错误做点什么 token 已过期
+  //获取状态码
+  const {status} = error.response;
+  console.log(status)
+  if(status === 401) {
+   // userName用户存在
+  if(sessionStorage.getItem('mobile')){
+    Message.error("身份过期,请重新登录");
+      router.push('/')
+    return
+  }else{
+    router.push('/')
+  }
+  }
+  return Promise.reject(error) 
+})
 
 //vue实例，需要放在拦截器之后
 new Vue({

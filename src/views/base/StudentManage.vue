@@ -93,7 +93,6 @@ export default {
         return callback(new Error("手机号不能为空"));
       } else {
         const reg = /^1[3|4|5|7|8][0-9]\d{8}$/;
-        console.log(reg.test(value));
         if (reg.test(value)) {
           callback();
         } else {
@@ -264,21 +263,41 @@ export default {
           that.axios
             .post("Student/ModifyStudent", that.form)
             .then(res => {
-              console.log(res.data.code);
+              let code = res.data.code; //获取后台返回的状态码
               if (res.data.code == 1) {
                 let index = that.form.index;
-                that.tableData[index].stuName = that.form.stuName;
-                that.tableData[index].stuBirthDay = that.form.stuBirthDay;
-                that.tableData[index].stuMobile = that.form.stuMobile;
-                that.tableData[index].stuPassword = that.form.stuPassword;
-                that.tableData[index].stuSex = that.form.stuSex;
-                that.tableData[index].className = that.form.className;
-                that.tableData[index].stuAge = res.data.data; //后台会返回年龄
+                if(that.form.className == that.tableData[index].className){//如果编辑的是当前选中班级的学生，就进行即时更新
+                  that.tableData[index].stuName = that.form.stuName;
+                  that.tableData[index].stuBirthDay = that.form.stuBirthDay;
+                  that.tableData[index].stuMobile = that.form.stuMobile;
+                  that.tableData[index].stuPassword = that.form.stuPassword;
+                  that.tableData[index].stuSex = that.form.stuSex;
+                  that.tableData[index].className = that.form.className;
+                  that.tableData[index].stuAge = res.data.data; //后台会返回年龄
+                }else{
+                  that.tableData.splice(index,1)//否则就从当前页面移除
+                }
                 that.$message({
                   message: "修改成功!",
                   type: "success"
                 });
                 that.dialogFormVisible = false; //成功之后把弹框和隐藏
+              }
+              switch (code) {
+                case -1: //code=-1 系统异常
+                  that.$message({
+                    type: "warning",
+                    message: res.data.message
+                  });
+                  break;
+                case -2: // code=-2 参数错误
+                  that.$message({
+                    type: "warning",
+                    message: res.data.message
+                  });
+                  break;
+                default:
+                  break;
               }
             })
             .catch(err => {
@@ -320,9 +339,9 @@ export default {
           that.axios
             .post("Student/AddStudent", that.form)
             .then(res => {
-              console.log(res.data.code);
+              let code = res.data.code;
               let data = res.data.data;
-              if (res.data.code == 1) {
+              if (code == 1) {
                 that.$message({
                   message: "新增成功!",
                   type: "success"
@@ -332,6 +351,23 @@ export default {
                   that.tableData.unshift(data);
                 }
                 that.dialogFormVisible = false;
+              }
+              switch (code) {
+                case -1: //code=-1 系统异常
+                  that.$message({
+                    type: "warning",
+                    message: res.data.message
+                  });
+                  break;
+                case -2: // code=-2 参数错误
+                  that.$message({
+                    type: "warning",
+                    message: res.data.message
+                  });
+                  break;
+                default:
+                  message = res.data.message;
+                  break;
               }
             })
             .catch(err => {

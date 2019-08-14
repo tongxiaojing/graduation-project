@@ -96,33 +96,42 @@ export default {
                   }
                 })
                 .then(res => {
-                  console.log(res);
-                  var type = "warning"; //判断状态类型
-                  var message = "其它错误"; //接收错误信息
                   //根据返回的code值判断当前请求状态
+                  console.log(res.data)
                   switch (res.data.code) {
                     case -1: //code=-1 系统异常
-                      message = res.data.message;
+                      that.$message({
+                        type: "warning",
+                        message: "系统异常"
+                      });
                       break;
                     case -2: // code=-2 参数错误
+                      that.$message({
+                        type: "warning",
+                        message: "参数错误"
+                      });
+                      break;
+                      case -3: //code=0 数据没有任何变化
+                      that.$message({
+                        type: "warning",
+                        message: "旧密码错误"
+                      });
                       break;
                     case 0: //code=0 数据没有任何变化
-                      message = res.data.message;
-                      type = "info";
+                      that.$message({
+                        type: "info",
+                        message: "数据没有任何变化"
+                      });
                       break;
                     case 1: //code=1 成功
-                      message = res.data.message;
-                      type = "success";
+                      that.$message({
+                        type: "success",
+                        message: "修改成功,请重新登陆!"
+                      });
+                      that.$router.push("/");
                       break;
                     default:
-                      message = res.data.message;
                       break;
-                  }
-                  if (res.data.code == 1) {
-                    that.$message({
-                      type: "success",
-                      message: "修改成功!"
-                    });
                   }
                 })
                 .catch(error => {

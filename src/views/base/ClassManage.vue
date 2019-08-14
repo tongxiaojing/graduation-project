@@ -146,7 +146,7 @@ export default {
       that.axios
         .get("User/GetTeachers")
         .then(res => {
-         // console.log(res.data);
+          // console.log(res.data);
           that.teachersInfo = res.data;
         })
         .catch(err => {
@@ -180,7 +180,6 @@ export default {
           return item.userName == userName;
         } //遍历数据得到当前选中教师的下标
       );
-      console.log(index);
       that.form.classTeacherId = that.teachersInfo[index].userId; //并赋值给表单对象
     },
     /**
@@ -228,26 +227,33 @@ export default {
             })
             .then(res => {
               let code = res.data.code; //获取后台返回的状态码
-              let data = res.data.data; //保存后台返回的数据
-              if (code == 1) {
-                data.courseName = that.form.courseName; //返回的值需重新赋值，因为后台返回数据不存在专业名称，老师名称
-                data.userName = that.form.userName;
-                that.tableData.unshift(data); //添加到数组的前面
-                that.$message({
-                  message: "新增成功!",
-                  type: "success"
-                });
-                that.dialogFormVisible = false; //将弹框隐藏
-              } else if (code == -1) {
-                that.$message({
-                  message: "系统异常!",
-                  type: "warning"
-                });
-              } else if (code == -2) {
-                that.$message({
-                  message: "参数错误!",
-                  type: "warning"
-                });
+              let data = res.data.data;//获取后台返回数据
+              switch (code) {
+                case -1: //code=-1 系统异常
+                  that.$message({
+                    type: "warning",
+                    message: res.data.message
+                  });
+                  break;
+                case -2: // code=-2 参数错误
+                  that.$message({
+                    type: "warning",
+                    message: res.data.message
+                  });
+                  break;
+                case 1: //code=1 成功
+                  data.courseName = that.form.courseName; //返回的值需重新赋值，因为后台返回数据不存在专业名称，老师名称
+                  data.userName = that.form.userName;
+                  that.tableData.unshift(data); //添加到数组的前面
+                  that.$message({
+                    message: "新增成功!",
+                    type: "success"
+                  });
+                  that.dialogFormVisible = false; //将弹框隐藏
+                  break;
+                default:
+                  message = res.data.message;
+                  break;
               }
             })
             .catch(err => {
@@ -285,8 +291,7 @@ export default {
      */
     updateClass(formName) {
       let that = this;
-      that.dialogFormVisible = false;
-     //console.log("编辑班级信息");
+      //console.log("编辑班级信息");
       that.$refs[formName].validate(valid => {
         if (valid) {
           that.axios
@@ -297,57 +302,45 @@ export default {
               classTeacherId: that.form.classTeacherId //老师编号
             })
             .then(res => {
-             // console.log(res.data.code);
-              var type = "warning"; //判断状态类型
-              var message = "其它错误"; //接收错误信息
               //根据返回的code值判断当前请求状态
               switch (res.data.code) {
                 case -1: //code=-1 系统异常
-                  message = res.data.message;
                   that.$message({
                     type: "warning",
-                    message: message
+                    message: res.data.message
                   });
                   break;
                 case -2: // code=-2 参数错误
-                  message = res.data.message;
-                  message = res.data.message;
                   that.$message({
                     type: "warning",
-                    message: message
+                    message: res.data.message
                   });
                   break;
                 case 0: //code=0 数据没有任何变化
-                  message = res.data.message;
-                  type = "info";
                   that.$message({
-                    type: type,
-                    message: message
+                    type: "info",
+                    message: res.data.message
                   });
                   break;
                 case 1: //code=1 成功
-                  message = res.data.message;
-                  type = "success";
+                  let index = that.form.index;
+                  that.tableData[index].className = that.form.className;
+                  that.tableData[index].courseName = that.form.courseName;
+                  that.tableData[index].userName = that.form.userName;
+                  that.$message({
+                    message: "修改成功!",
+                    type: "success"
+                  });
+                  that.dialogFormVisible = false; //成功之后把弹框和隐藏
                   break;
                 default:
                   message = res.data.message;
                   break;
               }
-              if (res.data.code == 1) {
-                let index = that.form.index;
-                that.tableData[index].className = that.form.className;
-                that.tableData[index].courseName = that.form.courseName;
-                that.tableData[index].userName = that.form.userName;
-                that.$message({
-                  message: "修改成功!",
-                  type: "success"
-                });
-                that.dialogFormVisible = false; //成功之后把弹框和隐藏
-              }
             });
         } else {
           that.$message({
-            message: "请输入班级名称",
+            message: "请输入有效信息",
             type: "warning"
           });
           return false;

@@ -102,7 +102,7 @@ export default {
     return {
       userName: sessionStorage.getItem("user"), //获取当前用户名
       isCollapse: true, //保存折叠状态
-      topNav: '',
+      topNav: '',//面包屑导航数据
       listData: [
         {
           title: "基础模块", //基础模块数据
@@ -184,11 +184,12 @@ export default {
      * 侧边栏点击添加tab标签页
      * @param {String} listTitle 二级菜单的title
      * @param {String} path 是路径
+     * @param {String} title 增加的tab的title
      */
-    addTab(listTitle, path,title) {
+    addTab(listTitle,path,title) {
       let that = this; //用that保存this的指向
       that.topNav = listTitle;
-      that.bbb = title;
+      // that.bbb = title;
       let newTabName = path; //绑定当前菜单的路径到新增tag标签页上
       //console.log(newTabName)
       that.editableTabsValue = newTabName; //将新增的tabs标签页默认选中

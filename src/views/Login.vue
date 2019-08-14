@@ -65,7 +65,7 @@ export default {
           }
         })
         .then(res => {
-          console.log(res.data);
+          console.log(res.data)
           that.loading=false;//登录按钮状态应改为可用
           that.$router.push("/home");//登陆成功之后跳转至主页面
           that.userToken = res.data.token_type +' '+ res.data.access_token;//将后台返回的令牌存储起来

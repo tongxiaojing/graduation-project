@@ -7,11 +7,15 @@
         <i class="el-icon-circle-plus-outline"></i>
       </el-button>
       <span style=" margin-left: 15px;">
-        <el-radio-group v-model="radio">
-          <el-radio :label="3">全部</el-radio>
-          <el-radio :label="6">教员</el-radio>
-          <el-radio :label="9">管理员</el-radio>
+        <template>
+        <el-radio-group v-model="radio" @change="tableData = roleFilter">
+          <el-radio
+            v-for="(item,index) in radioRole"
+            :key="index"
+            :label="item.userTypeTypeName"
+          >{{ item.userTypeTypeName}}</el-radio>
         </el-radio-group>
+      </template>
       </span>
     </div>
     <!-- 班级信息表格 -->
@@ -94,12 +98,19 @@ export default {
       }
     };
     return {
-      radio: 3,
       formLabelWidth: "120px",
       dailogTitleType: "", //dialog的title
       dialogFormVisible: false, //控制dialog是显示还是隐藏状态，默认隐藏
       submitForm: false, //如果是false，就是修改，true就是新增
       allRole: [], //获取所有角色
+      filterRole: [], //用于存储过滤转换出来的数据
+      radioRole:[//单选组所有角色数据
+        {
+          userTypeId: 0,
+          userTypeTypeName: "全部"
+        }
+      ],
+       radio:"全部" ,//默认选中
       //表格数据
       tableData: [
         {
@@ -122,7 +133,7 @@ export default {
         userSex: "", //性别
         userPassword: "", //密码
         userUserTypeId: "", //角色编号
-        userTypeTypeName:"",//角色名称
+        userTypeTypeName: "", //角色名称
         index: 0 //当前点击的下标
       },
       rules: {
@@ -133,7 +144,7 @@ export default {
         userMobile: [
           { required: true, validator: checkPhone, trigger: "blur" }
         ],
-        userSex: [{ required: true, message: "请选择性别", trigger: "change" }],
+        userSex: [{ required: true, message: "请选择性别", trigger: "blur" }],
         userPassword: [
           { required: true, message: "请输入密码", trigger: "blur" },
           {
@@ -173,7 +184,8 @@ export default {
       that.axios
         .get("UserType/GetUserRoles")
         .then(res => {
-          that.allRole = res.data;
+          that.allRole = res.data;//下拉框所有角色
+          that.radioRole.push(...res.data);//单选组所有角色
         })
         .catch(err => {
           console.log(err);
@@ -187,7 +199,8 @@ export default {
       that.axios
         .get("User/GetTeachers")
         .then(res => {
-          that.tableData = res.data;
+          that.tableData = res.data;//保存所有教师信息
+          that.filterRole = res.data;//保存过滤出来的数据
         })
         .catch(err => {
           console.log(err);
@@ -225,20 +238,36 @@ export default {
               userPassword: that.form.userPassword //密码
             })
             .then(res => {
-              console.log(res.data.code);
-              if (res.data.code == 1) {
-                let index = that.form.index;
-                that.tableData[index].userName = that.form.userName;
-                that.tableData[index].userMobile = that.form.userMobile;
-                that.tableData[index].userSex = that.form.userSex;
-                that.tableData[index].userPassword = that.form.userPassword;
-                that.tableData[index].userTypeTypeName =
-                  that.form.userTypeTypeName;
-                that.$message({
-                  message: "修改成功!",
-                  type: "success"
-                });
-                that.dialogFormVisible = false; //成功之后把弹框和隐藏
+              let code = res.data.code; //获取后台返回的状态码
+              switch (code) {
+                case -1: //code=-1 系统异常
+                  that.$message({
+                    type: "warning",
+                    message: res.data.message
+                  });
+                  break;
+                case -2: // code=-2 参数错误
+                  that.$message({
+                    type: "warning",
+                    message: res.data.message
+                  });
+                  break;
+                case 1: //code=1 成功
+                  let index = that.form.index;
+                  that.tableData[index].userName = that.form.userName;
+                  that.tableData[index].userMobile = that.form.userMobile;
+                  that.tableData[index].userSex = that.form.userSex;
+                  that.tableData[index].userPassword = that.form.userPassword;
+                  that.tableData[index].userTypeTypeName = that.form.userTypeTypeName;
+                  that.$message({
+                    message: "修改成功!",
+                    type: "success"
+                  });
+                  that.dialogFormVisible = false; //成功之后把弹框和隐藏
+                  break;
+                default:
+                  message = res.data.message;
+                  break;
               }
             });
         } else {
@@ -281,37 +310,44 @@ export default {
               userUserTypeId: that.form.userUserTypeId //用户角色编号
             })
             .then(res => {
-              console.log(res.data);
               let data = res.data.data; //保存后台返回的数据
-              if (res.data.code == 1) {
+              let code = res.data.code; //获取后台返回的状态码
+              switch (code) {
+                case -1: //code=-1 系统异常
+                  that.$message({
+                    type: "warning",
+                    message: res.data.message
+                  });
+                  break;
+                case -2: // code=-2 参数错误
+                  that.$message({
+                    type: "warning",
+                    message: res.data.message
+                  });
+                  break;
+                case 1: //code=1 成功
                   (data.userName = that.form.userName), //新增用户名
                   (data.userMobile = that.form.userMobile), //新增用户电话号码
                   (data.userPassword = that.form.userPassword), //新增用户密码
                   (data.userSex = that.form.userSex); //新增用户性别
-                data.userTypeTypeName = that.form.userTypeTypeName; //新增用户职称
-                that.tableData.unshift(data);
-                that.$message({
-                  type: "success",
-                  message: "新增成功!"
-                });
-                that.dialogFormVisible = false;
-              } else if (code == -1) {
-                that.$message({
-                  message: "系统异常!",
-                  type: "warning"
-                });
-              } else if (code == -2) {
-                that.$message({
-                  message: "参数错误!",
-                  type: "warning"
-                });
+                  data.userTypeTypeName = that.form.userTypeTypeName; //新增用户职称
+                  that.tableData.unshift(data);
+                  that.$message({
+                    type: "success",
+                    message: "新增成功!"
+                  });
+                  that.dialogFormVisible = false;
+                  break;
+                  default:
+                    message = res.data.message;
+                    break;
               }
             })
             .catch(err => {
               console.log(err);
             });
         } else {
-            that.$message({
+          that.$message({
             message: "请输入有效信息!",
             type: "warning"
           });
@@ -361,6 +397,18 @@ export default {
             message: "已取消删除"
           });
         });
+    }
+  },
+  computed: {
+    // 过滤计算
+    roleFilter() {
+      let that = this;
+      let role = that.filterRole;
+      let typeName = that.radioRole[0].userTypeTypeName;
+      if (that.radio == typeName) {
+        return that.filterRole;
+      }
+      return role.filter(value => value.userTypeTypeName == that.radio);
     }
   }
 };
