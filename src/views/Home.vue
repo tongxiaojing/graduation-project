@@ -336,7 +336,6 @@ export default {
   }
   .el-main {
     padding: 0;
-    overflow: hidden;
     &.el-main {
       //面包屑导航样式
       /deep/ .el-breadcrumb {

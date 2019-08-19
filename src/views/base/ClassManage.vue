@@ -324,9 +324,12 @@ export default {
                   break;
                 case 1: //code=1 成功
                   let index = that.form.index;
-                  that.tableData[index].className = that.form.className;
-                  that.tableData[index].courseName = that.form.courseName;
-                  that.tableData[index].userName = that.form.userName;
+                  this.$set( that.tableData[index],'className',that.form.className);//避免数据更新了但是页面没有及时更新
+                  this.$set( that.tableData[index],'courseName',that.form.courseName);
+                  this.$set( that.tableData[index],'userName',that.form.userName);
+                  //that.tableData[index].className = that.form.className;
+                  // that.tableData[index].courseName = that.form.courseName;
+                  // that.tableData[index].userName = that.form.userName;
                   that.$message({
                     message: "修改成功!",
                     type: "success"
