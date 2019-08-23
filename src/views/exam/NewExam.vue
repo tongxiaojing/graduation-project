@@ -37,7 +37,7 @@
           </el-form-item>
         </el-form>
         <div class="paperContent" v-show="active == 1">
-          <div class="top" >
+          <div class="top">
             <span style="padding-right:10%;">题目类型</span>
             <el-radio-group v-model="radio" @change="selectedType">
               <el-radio
@@ -49,29 +49,31 @@
           </div>
           <div class="questionType">
             <div v-show="choiceQueId==1 && active == 1">
-              <single-choice></single-choice>
+              <single-choice @saved="getData"></single-choice>
             </div>
             <div>
-              <gap-fill v-show="choiceQueId==2"></gap-fill>
+              <gap-fill v-show="choiceQueId==2" @savedEassy="getEassay"></gap-fill>
             </div>
             <div>
               <essay-question v-show="choiceQueId==3"></essay-question>
             </div>
-            <p @assss="getCourseInfo"></p>
           </div>
         </div>
       </div>
     </el-card>
     <div class="paperDetail" v-if="active!=0">
-    <el-card class="box-card" style="text-align:left;margin-top:5%;">
-      <h4>一、选择题</h4> 
-    </el-card>
-    <el-card class="box-card" style="text-align:left;margin-top:5%;">
-      <h4>二、填空题</h4> 
-    </el-card>
-    <el-card class="box-card" style="text-align:left;margin-top:5%;">
-      <h4>三、问答题</h4> 
-    </el-card>
+      <!-- 选择题部分 -->
+      <el-card class="box-card" style="text-align:left;margin-top:5%;">
+        <choice-detail v-bind:choiceData="choiceData"></choice-detail>
+      </el-card>
+      <!-- 填空题部分 -->
+      <el-card class="box-card" style="text-align:left;margin-top:5%;">
+        <h4>二、填空题</h4>
+      </el-card>
+      <!-- 问答题部分 -->
+      <el-card class="box-card" style="text-align:left;margin-top:5%;">
+        <eassay-detail v-bind:eassayData="eassayData"></eassay-detail>
+      </el-card>
     </div>
   </div>
 </template>
@@ -80,25 +82,74 @@ import SingleChoice from "@/components/AddSingelChoice";
 import GapFill from "@/components/AddGapFill";
 import EssayQuestion from "@/components/AddEssayQuestion";
 import ChoiceDetail from "@/components/ChoiceDetail";
+import EassayDetail from "@/components/EassayDetail";
 export default {
   components: {
     SingleChoice, //单选组件
     GapFill, //填空组件
-    EssayQuestion //问答题组件
+    EssayQuestion, //问答题组件
+    ChoiceDetail ,//选择题详情组件
+    EassayDetail//问答题组件
   },
   data() {
     return {
-      testPaperId:0, //获取当前试卷ID
+      liList: ["A", "B", "C", "D", "E", "F"],
+      testPaperId: 0, //获取当前试卷ID
       choiceQueId: 1, //当前选中问题类型的ID
       active: 0,
       radio: "选择题", //单选组按钮默认选中
       courseInfo: [], //获取课程信息
       questionType: [], //问题类型
       form: {
+        //试卷科目信息
         tpTitle: "",
         courseName: "",
         tpCourseId: ""
       },
+      TestPaper: [
+        //存储后台返回的试卷总信息
+        {
+          tpqId: 0, //题目在试卷上的主键编号
+          tpqPaperId: 0, //试卷编号
+          tpqQuestionId: 0, //题目编号
+          tpqScore: 0, //分值
+          tpqQuestion: {
+            //题目详情
+            questionId: 0, //题目编号
+            questionTitle: "string", //题干
+            questionTypeId: 0, //题目类型编号 1=选择题 2=填空题 3=问题
+            answerQuestion: {
+              //问答题
+              aqQuestionId: 0, //主键编号
+              aqAnswer: "string" //参考答案
+            },
+            chooseQuestion: [
+              //选择的题的选项信息
+              {
+                cqId: 0, //主键编号
+                cqQuestionId: 0, //题目编号
+                cqOption: "string", //选项内容
+                cqIsRight: true //是否为正确答案
+              }
+            ],
+            fillQuestion: [
+              //填空题，每个填空项信息
+              {
+                fqId: 0, //主键编号
+                fqQuestionId: 0, //题目编号
+                fqAnswer: "string", //答案
+                fqOrder: 1, //排序号
+                fillQuestionScore: {
+                  fqsFilleQuestionId: 0, //题目在试卷上的编号
+                  fqsPaperQuestionId: 0, //试卷编号
+                  fqsScore: 0 //分值
+                }
+              }
+            ]
+          }
+        }
+      ],
+      // choiceData: [], //存储过滤之后的后台返回选择题数据
       rules: {
         //验证规则
         testPaperName: [
@@ -113,8 +164,24 @@ export default {
   mounted() {
     this.getCourseInfo(); //获取所有课程信息
     this.getQuestioType(); //获取所有问题类型
+    this.getPaperInfo(); //获取所有试卷信息
   },
   methods: {
+    /**
+    *接收子组件提交的选择题数据
+    */
+    getData(data) {
+      console.log(111);
+      this.TestPaper.push(data);
+      console.log(this.choiceData);
+    },
+    /**
+     * 接收子组件提交的问答题数据
+     */
+    getEassay(data){
+      this.TestPaper.push(data);
+      console.log(data);
+    },
     next() {
       if (this.active++ > 2) this.active = 0;
     },
@@ -128,7 +195,7 @@ export default {
         return item.typeName == typeName;
       });
       that.choiceQueId = index.typeId; //并赋值给表单对象
-     // console.log(that.choiceQueId);
+      // console.log(that.choiceQueId);
     },
     /**
      * 获取所有课程信息
@@ -175,7 +242,7 @@ export default {
       //console.log(that.form.tpCourseId);
     },
     /**
-     * 表单提交
+     * 试卷课程的表单提交
      */
     submitForm(formName) {
       let that = this;
@@ -183,21 +250,22 @@ export default {
         //console.log(that.form.tpTitle)
         //console.log(that.form.tpCourseId)
         if (valid) {
-          that.axios.post("TestPaper/MakeTestPaper",that.form, {
-            params:{
-              uid:sessionStorage.getItem("uid")
-            }
-          })
-          .then(res =>{
-            console.log(res.data)
-            if(res.data.code == 1){
-              localStorage.setItem('testPaperId',res.data.data.testPaperId)
-              that.active=1;
-            }
-          })
-          .catch(err =>{
-            console.log(err)
-          })
+          that.axios
+            .post("TestPaper/MakeTestPaper", that.form, {
+              params: {
+                uid: sessionStorage.getItem("uid")
+              }
+            })
+            .then(res => {
+              //console.log(res.data);
+              if (res.data.code == 1) {
+                localStorage.setItem("testPaperId", res.data.data.testPaperId);
+                that.active = 1;
+              }
+            })
+            .catch(err => {
+              console.log(err);
+            });
         } else {
           console.log("error submit!!");
           return false;
@@ -205,10 +273,56 @@ export default {
       });
     },
     /**
+     * 获取试卷信息
+     */
+    getPaperInfo() {
+      let that = this;
+      that.axios
+        .get("TestPaper/GetTestPaper", {
+          params: {
+            id: localStorage.getItem('testPaperId')
+          }
+        })
+        .then(res => {
+          let that = this;
+          console.log(res.data);
+          that.TestPaper = res.data.questions;
+          if (that.TestPaper) {
+            that.TestPaper.forEach(item => (item.editShow = true)); //控制编辑状态的显示或隐藏
+            console.log(res.data);
+          }
+        })
+        .catch(err => {
+          console.log(err);
+        });
+    },
+    /**
      * 重置表单
      */
     resetForm(formName) {
       this.$refs[formName].resetFields();
+    }
+  },
+  computed: {
+    //过滤选择题数据
+    choiceData() {
+      var that = this;
+      if (that.TestPaper) {
+        console.log(that.TestPaper);
+        return that.TestPaper.filter(
+          item => item.tpqQuestion.questionTypeId == 1
+        );
+      }
+    },
+    //过滤问答题数据
+    eassayData() {
+      var that = this;
+      if (that.TestPaper) {
+        console.log(that.TestPaper);
+        return that.TestPaper.filter(
+          item => item.tpqQuestion.questionTypeId == 3
+        );
+      }
     }
   }
 };
@@ -224,6 +338,13 @@ export default {
       .top {
         text-align: left;
       }
+    }
+  }
+  .olForm li {
+    margin: 3% 0;
+    font-size: 16px;
+    .ulForm li {
+      line-height: 5%;
     }
   }
 }
